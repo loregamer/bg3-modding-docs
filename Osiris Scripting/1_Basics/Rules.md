@@ -7,16 +7,17 @@ Rules are the heart of Osiris scripting. A rule consists of conditions that, whe
 Rules in Osiris have two parts:
 
 1. One or more conditions
-   * This part begins with `IF`
-   * This part is **evaluated** whenever the rule is **triggered**
-   * Each condition is on its own line
-   * Each condition is separated by the line `AND`
+
+   - This part begins with `IF`
+   - This part is **evaluated** whenever the rule is **triggered**
+   - Each condition is on its own line
+   - Each condition is separated by the line `AND`
 
 2. One or more actions
-   * This part begins with `THEN`
-   * This part is **executed** when all of the conditions are met
-   * Each action is on its own line
-   * Each action ends with `;`
+   - This part begins with `THEN`
+   - This part is **executed** when all of the conditions are met
+   - Each action is on its own line
+   - Each action ends with `;`
 
 The basic structure of a rule is:
 
@@ -41,7 +42,7 @@ There are two categories of conditions in Osiris:
 1. A **trigger condition** will trigger the rule for evaluation as soon as it becomes true.
 2. An **extra condition** will never trigger an evaluation.
 
-No matter what triggers the rule, every single condition (triggers *and* extras) must all be true when a rule is evaluated for it to execute its actions.
+No matter what triggers the rule, every single condition (triggers _and_ extras) must all be true when a rule is evaluated for it to execute its actions.
 
 ### Trigger Conditions
 
@@ -50,6 +51,7 @@ Trigger conditions are what cause a rule to be evaluated. There are two main typ
 #### 1. Osiris Events
 
 Events notify Osiris that something has happened in the game. For example:
+
 - A character died
 - An item was picked up
 - A dialog started
@@ -57,6 +59,7 @@ Events notify Osiris that something has happened in the game. For example:
 **Important**: An event can only be used as the **first** trigger condition. Putting it anywhere else will result in a compilation error.
 
 Example:
+
 ```
 IF
 CharacterDied(_Character) // Event as the first trigger condition
@@ -71,6 +74,7 @@ DB_PlayerDied(1);
 A rule can be triggered when a new database fact is added. Database fact trigger conditions can appear anywhere in a rule's conditions.
 
 Example:
+
 ```
 IF
 DB_IsPlayer(_Character) // Triggered when a character is added to this database
@@ -133,6 +137,35 @@ _Level >= 5 // Comparison
 THEN
 DB_HighLevelPlayer(_Character);
 ```
+
+## What Cannot Be Used As Conditions
+
+It's important to understand what **cannot** be used as a condition in rules:
+
+1. **Procedures (PROC)**: Procedures cannot be used as conditions in rules. They are only meant to be called as actions after the `THEN` keyword. This is a common mistake:
+
+   ```
+   // INCORRECT - Will generate a compilation error
+   IF
+   PROC_SelectRandomStartOrigin() // Error: Procedure cannot be used as a condition
+   THEN
+   DoSomething();
+   ```
+
+2. **Osiris Calls**: Game engine calls are actions, not conditions:
+   ```
+   // INCORRECT - Will generate a compilation error
+   IF
+   CharacterHeal(_Character, 10) // Error: Call cannot be used as a condition
+   THEN
+   DB_HealedCharacter(_Character);
+   ```
+
+To check conditions related to a procedure's functionality, consider:
+
+1. Creating a query (QRY) to encapsulate the condition check
+2. Using database entries to track states that the procedure would have checked
+3. Using existing Osiris queries to check the relevant game state
 
 ## Rule Evaluation and Variables
 
@@ -207,13 +240,81 @@ To optimize rule performance, consider these practices:
    _Character == S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d
    THEN
    Action1;
-   
+
    // More efficient - only triggers for Wyll
    IF
    DB_Players(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
    THEN
    Action1;
    ```
+
+## Common Mistakes and Their Solutions
+
+### 1. Using a Procedure as a Condition
+
+**Problem:**
+
+```
+// INCORRECT
+IF
+PROC_SelectRandomStartOrigin()
+AND
+DB_RandomizeStartOrigin(1, 0)
+THEN
+PROC_SetAsStartOrigin(_Character);
+```
+
+**Solution:**
+Instead of trying to intercept a procedure call, inspect the code to see if there's a database value you can set that the procedure will check, or create a query to encapsulate the condition:
+
+```
+// CORRECT
+// In INIT section:
+DB_PredefinedStartOrigin(_DesiredCharacter);
+
+// The existing procedure will then use this value:
+// PROC
+// PROC_SelectRandomStartOrigin()
+// AND
+// DB_PredefinedStartOrigin(_Origin)
+// THEN
+// PROC_SetAsStartOrigin(_Origin);
+```
+
+### 2. Confusing Queries and Procedures
+
+**Problem:**
+
+```
+// INCORRECT
+IF
+DB_IsPlayer(_Character)
+AND
+PROC_IsInDanger(_Character) // Error: Using a procedure as a condition
+THEN
+CharacterStatusText(_Character, "In Danger!");
+```
+
+**Solution:**
+Create a query instead of a procedure for condition checking:
+
+```
+// CORRECT
+QRY
+QRY_IsInDanger((CHARACTERGUID)_Character)
+AND
+CharacterHasStatus(_Character, "BURNING", 1)
+THEN
+DB_NOOP(1);
+
+// Then use it in your rule
+IF
+DB_IsPlayer(_Character)
+AND
+QRY_IsInDanger(_Character)
+THEN
+CharacterStatusText(_Character, "In Danger!");
+```
 
 ## Rule Evaluation
 
@@ -226,6 +327,15 @@ A few important things to understand about rule evaluation:
 3. **One-Time Execution**: Rules only trigger when their conditions become true, not continuously while they are true.
 
 4. **No OR Conditions**: Osiris rule conditions can only be combined with AND, not OR. Use user-defined queries to implement OR-conditions.
+
+## Using the Story Editor
+
+When working with the Story Editor, remember:
+
+1. The editor has three separate panes for INIT, KB, and EXIT sections.
+2. In the KB pane, rules must follow the proper syntax with IF and THEN sections.
+3. Procedures defined in other goals are not directly visible in the editor, so you can't see their implementation.
+4. The editor will check syntax but cannot detect all logical errors.
 
 ## Next Steps
 
