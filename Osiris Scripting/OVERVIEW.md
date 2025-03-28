@@ -6,6 +6,8 @@ This document provides a quick overview of Osiris scripting concepts for Baldur'
 
 Osiris is a declarative programming language used in Larian Studios' games, including Baldur's Gate 3. Unlike traditional programming languages where you specify exactly *how* to do something step-by-step, Osiris focuses on defining *what* conditions should trigger *what* actions.
 
+Osiris has a higher priority over other scripting languages used in the Editor, meaning that Osiris calls have a guaranteed execution if the target of the call is valid.
+
 [Read more about Osiris basics](1_Basics/Introduction.md)
 
 ## Key Concepts
@@ -101,6 +103,14 @@ Osiris has two types of subroutines:
 
 ## Advanced Topics
 
+### Understanding Rules
+
+- Learn how Osiris evaluates rules with variables
+- Understand how database combinations work
+- Optimize rule performance
+
+[Read more about understanding rules](3_Advanced/Understanding_Rules.md)
+
 ### Design Patterns
 
 Common design patterns in Osiris include:
@@ -124,6 +134,15 @@ Things to watch out for:
 
 ## Reference
 
+### Story Editor
+
+The Story Editor is the primary tool for:
+- Creating and editing Osiris scripts
+- Building and reloading scripts
+- Debugging and error handling
+
+[Learn about the Story Editor](4_Reference/Story_Editor.md)
+
 ### API Reference
 
 Osiris provides APIs in three categories:
@@ -131,22 +150,33 @@ Osiris provides APIs in three categories:
 - **Queries**: Get information about the game state (e.g., `CharacterGetLevel`)
 - **Calls**: Change the game state (e.g., `CharacterHeal`)
 
-[Read the API reference](4_Reference/API_Reference.md)
-
-### Story Editor
-
-The Story Editor is the primary tool for creating and editing Osiris scripts:
-- Build options for compiling scripts
-- Code completion helpers
-- Goal management interface
-
-[Learn about the Story Editor](4_Reference/Story_Editor.md)
+[Osiris Events Reference](4_Reference/Osiris_Events.md)
+[Osiris Queries Reference](4_Reference/Osiris_Queries.md)
+[Osiris Calls Reference](4_Reference/Osiris_Calls.md)
 
 ## Recommended Learning Path
 
-1. Start with basic concepts in the [1_Basics](1_Basics) folder
-2. Move on to intermediate topics in the [2_Intermediate](2_Intermediate) folder
-3. Learn advanced patterns and gotchas in the [3_Advanced](3_Advanced) folder
-4. Use the reference material in the [4_Reference](4_Reference) folder as needed
+1. Start with basic concepts in the [1_Basics](1_Basics) folder:
+   - [Introduction to Osiris](1_Basics/Introduction.md)
+   - [Program Structure](1_Basics/Program_Structure.md)
+   - [Types](1_Basics/Types.md)
+   - [Databases](1_Basics/Databases.md)
+   - [Rules](1_Basics/Rules.md)
+
+2. Move on to intermediate topics in the [2_Intermediate](2_Intermediate) folder:
+   - [Variables](2_Intermediate/Variables.md)
+   - [Subroutines](2_Intermediate/Subroutines.md)
+   - [Program Execution](2_Intermediate/Program_Execution.md)
+
+3. Learn advanced patterns and gotchas in the [3_Advanced](3_Advanced) folder:
+   - [Understanding Rules](3_Advanced/Understanding_Rules.md)
+   - [Design Patterns](3_Advanced/Design_Patterns.md)
+   - [Gotchas](3_Advanced/Gotchas.md)
+
+4. Use the reference material in the [4_Reference](4_Reference) folder as needed:
+   - [Story Editor](4_Reference/Story_Editor.md)
+   - [Osiris Events](4_Reference/Osiris_Events.md)
+   - [Osiris Queries](4_Reference/Osiris_Queries.md)
+   - [Osiris Calls](4_Reference/Osiris_Calls.md)
 
 Happy scripting!

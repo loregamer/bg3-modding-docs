@@ -1,159 +1,221 @@
-# Working with the Story Editor
+# Using the Story Editor
 
-The Story Editor is the primary tool for creating, editing, and building Osiris scripts in Baldur's Gate 3.
+The Story Editor is the primary tool for creating and editing Osiris scripts in Baldur's Gate 3. This guide covers how to use the Story Editor effectively, including building and debugging your scripts.
 
-![Story Editor](https://docs.larian.game/images/8/8d/StoryEditor.png)
+## Opening the Story Editor
 
-## Editor Interface
+In the Editor's main toolbar, click on the book icon to open the Story Editor. Alternatively, if the viewport is selected, you can use the keyboard shortcut `Ctrl+X`.
 
-The Story Editor consists of several panes:
+![Story Editor Button](https://example.com/storyeditor_button.png)
 
-1. **Goal Tree** (left pane): Shows the hierarchical structure of goals in your mod
-2. **Goal Editing Panes** (right panes): INIT, KB (Knowledge Base), and EXIT sections
-3. **Code Editor**: For writing and editing Osiris code
-4. **Status Bar**: Shows compilation status and other information
+## Story Editor Interface
 
-## Building the Story
+The Story Editor is divided into several panels:
 
-To build your Osiris scripts, the Story Editor provides several options under the "File" menu:
+1. **Goal Hierarchy Panel (Left)**: Shows all goals in the game, organized in a hierarchical structure
+2. **Script Editor Panel (Right)**: Contains three sections:
+   - **INIT**: For initialization code
+   - **KB**: For knowledge base rules
+   - **EXIT**: For cleanup code
+3. **Error Panel (Bottom)**: Shows errors and warnings during compilation
 
-### Build Options
+![Story Editor Interface](https://example.com/storyeditor_interface.png)
 
-1. **Generate Definitions, Build and Reload**
-   - The most thorough option
-   - Recreates all function definitions
-   - Builds the story
-   - Reloads the story so your changes take effect immediately
-   - Use this when you've made significant changes
+## Creating a New Script
 
-2. **Build**
-   - Only builds the story without regenerating definitions
-   - Sufficient for checking errors when no function definitions have changed
-   - Faster than a full build with definition generation
+To create a new script:
 
-3. **Build and Reload**
-   - Builds the story and reloads it
-   - Use when you've made changes and want to see them in the editor
+1. Find the appropriate parent goal in the hierarchy panel
+2. Right-click on the parent goal and select **Add New Sub Item**
+3. In the **New Script** dialog, select your mod project and name the script
 
-4. **Generate Definitions and Build**
-   - Recreates definitions and builds the story
-   - Does not reload the story
-   - Required for the first story build after an editor update
+### Goal Naming Convention
 
-5. **Generate Definitions**
-   - Only generates function definitions
-   - Useful to get code completion without rebuilding the story
+When creating new goals for BG3, it's recommended to follow the `Act_Region_Situation` naming convention. For example:
+- `Act3b_LOW_Applesnatcher` - For a quest in Act 3b, Lower City, involving an "Applesnatcher"
 
-## Code Editing Helper Functionality
+## Building and Reloading Scripts
 
-The Story Editor provides several features to help you write code:
+### Generate Definitions, Build and Reload
 
-### Code Completion
+This is the most comprehensive option for building your script:
 
-Press `Ctrl+Space` to access code completion. This helps you:
+1. Press `Ctrl+F7` or select **Generate Definitions, Build and Reload** from the menu
+2. This will:
+   - Generate definitions for autocomplete
+   - Build your script
+   - Reload the story in the editor
 
-- Find API functions
-- Complete database names
-- See parameter types
+### Advanced Build Options
 
-**Note**: For user-defined queries, code completion may add a wrong "__DEF" suffix that you'll need to delete.
+- **Build**: Compiles your script so the game can read and evaluate it
+- **Reload Story**: Reloads all goal files and executes their INIT sections in the Editor
+- **Generate Definitions**: Updates definitions for autocomplete without building
 
-### Parameter Information
+### Reloading in the Game
 
-When you're within a function call's parameter list, the editor shows parameter definitions at the top of the code editing window. This helps you understand:
+There are two ways to reload your script in the game:
 
-- Parameter names
-- Parameter types
-- Parameter order
+#### Option 1: Reload Level and Story
+- Press `Ctrl+F8` or select **Reload Level and Story** from the menu
+- This reloads both your script and all objects in the current level
+- Useful when testing changes to objects, but takes longer
 
-**Note**: The parameter list shown will always be for the last defined overload in the Story, so other definitions with more parameters may exist.
+#### Option 2: Reload Story Only
+- Press `F8` or select **Reload Story** from the Story Editor
+- Only reloads the scripts, not the level objects
+- Faster than reloading the entire level
 
-### Global Search
+## Common Build Errors and Warnings
 
-Press `Ctrl+Shift+F` to open the global search dialog. This allows you to search across all story files, which is useful for:
+### 1. Conflict with function definition
 
-- Finding examples of API usage
-- Locating specific databases or rules
-- Understanding how existing code works
+This occurs when a variable is used with different types. For example:
 
-## Working with Goals
+```
+IF
+FlagSet(_Player, "SOME_FLAG") // _Player is GUIDSTRING
+AND
+DB_Players(_Player) // DB_Players expects CHARACTER type
+```
 
-Goals are the main organizational unit in Osiris:
+**Fix**: Cast the variable to the expected type:
 
-### Creating Goals
+```
+IF
+FlagSet(_Player, "SOME_FLAG")
+AND
+DB_Players((CHARACTER)_Player) // Cast to CHARACTER type
+```
 
-1. Right-click on a goal in the tree to create a new subgoal
-2. Give it a descriptive name
-3. Goals become active when their parent completes
+### 2. Database checked but never defined
 
-### Editing Goals
+This error appears when you reference a database in a condition but never define any facts for it.
 
-Each goal has three sections:
+**Fix**: Either define the database or remove the reference.
 
-1. **INIT**: Actions executed when the goal initializes
-2. **KB**: Rules that are active while the goal is active
-3. **EXIT**: Actions executed when the goal completes
+### 3. Parameter X is an unbound variable
 
-### Organizing Goals
+This occurs when you use a variable that hasn't been assigned a value:
 
-Follow these best practices:
+```
+IF
+StatusRemoved(_Player, "STATUS_SLEEPING")
+AND
+IsOnStage(_Character, 1) // _Character is not defined anywhere
+```
 
-1. Use a hierarchical structure that matches your game's structure
-2. Name goals descriptively
-3. Use alphabetical ordering to control execution order when needed
-4. Create separate goals for different features or quests
+**Fix**: Use the correct variable name:
 
-## Known Limitations
+```
+IF
+StatusRemoved(_Player, "STATUS_SLEEPING")
+AND
+IsOnStage(_Player, 1) // Use _Player which is defined above
+```
 
-The Story Editor has a few limitations to be aware of:
+### 4. Auto-define Osiris query failed: type of parameter X unknown
 
-1. **Find Dialog Box**: Each pane has its own "Find" dialog (Ctrl+F). If you press Ctrl+F while a "Find" dialog is already open, it won't regain focus. Either close the dialog after searching or click on it to regain focus.
+This error occurs when you try to check a database for more values than it contains:
 
-2. **Parameter List Display**: The parameter list shown at the top of the window only shows the last defined overload of a function. Other overloads with different parameters may exist.
+```
+DB_BuffedPlayers(_Player); // Defines a single-column database
 
-3. **Performance with Large Files**: The editor can be slower when working with very large story files. Consider breaking your code into smaller, more manageable goals.
+IF
+DB_BuffedPlayers(_Player, _Duration) // Trying to get two columns from a single-column database
+```
 
-## Debugging Tips
+**Fix**: Make sure the database has the right number of columns for your query.
 
-The Story Editor doesn't have a traditional debugger, but you can use these techniques:
+### 5. Could not find any complete/correct definition of Osiris User Query/Procedure
 
-1. **Temporary Databases**: Create temporary databases to log values
-   ```
-   DB_Debug_Value(_Variable);
-   ```
+This happens when you use a query or procedure that doesn't exist or with the wrong number of parameters:
 
-2. **Status Text**: Use `CharacterStatusText` to display messages in-game
-   ```
-   CharacterStatusText(_Character, "Debug: Value is [1]", _Value);
-   ```
+```
+IF
+DB_Players(_Player)
+AND
+IsOnStage(_Player, 1, _Level) // IsOnStage only takes 2 parameters
+```
 
-3. **Console Commands**: Some debug commands can be entered in the console, like:
-   ```
-   AddDebugText("Debug message");
-   ```
+**Fix**: Check the definition of the query or procedure and use the correct number of parameters.
 
-4. **Incremental Development**: Build and test small pieces of functionality before combining them
+### 6. Conflict with function definition: parameter X type mismatch
+
+This occurs when you pass the wrong type to a query or procedure:
+
+```
+IF
+DB_Players(_Player)
+AND
+IsOnStage(1, _Player) // First parameter should be GUIDSTRING, not INTEGER
+```
+
+**Fix**: Use the correct parameter types.
+
+## Debugging with the Osiris Log
+
+The Osiris Log contains a trace of all Osiris activity, making it invaluable for debugging.
+
+### Opening the Osiris Log
+
+You can open the Osiris Log from the Story Editor via **File** > **Open Story Log**, or find it in your Baldur's Gate 3 Toolkit installation folder as `osirislog.[date_of_creation].log`.
+
+### Understanding the Log
+
+The Osiris Log includes:
+
+- **Events**: Lines starting with `>>> event` for game events
+- **Queries**: Lines with `exec [DIV/Osi user query]` for query execution
+- **Procedures**: Lines ending with `[Osiris procedure call]` for procedure calls
+- **Database Operations**: Entries and removals from databases
+
+### Debugging Tips
+
+1. **Nested Execution**: Lines with `X---->` show the nesting level of execution. The larger the number, the deeper the nesting.
+2. **Failed Queries**: Failed queries will show `*** Query Failed! ***` at the end of the line.
+3. **Sequential Execution**: The log shows exactly what happens and in what order, making it easier to track down issues.
+4. **Limited History**: The editor keeps the last 11 log files, so don't worry about losing logs when you reload.
+
+## Debugging Functions
+
+Osiris provides several debugging functions to help you trace script execution:
+
+### DebugText
+
+Displays text over a character's head:
+
+```
+IF
+DB_Players(_Player)
+THEN
+DebugText(_Player, "This is a debug message");
+```
+
+### TextEvent
+
+Simulates an event that can trigger other rules:
+
+```
+IF
+DB_Players(_Player)
+THEN
+TextEvent("my_debug_event");
+```
+
+Then you can have a rule triggered by this event:
+
+```
+IF
+TextEvent("my_debug_event")
+THEN
+// Debug code here
+```
 
 ## Best Practices
 
-1. **Regular Builds**: Build your story regularly to catch errors early
-
-2. **Consistent Naming**: Use consistent naming conventions for:
-   - Goals
-   - Databases
-   - Queries and procedures
-
-3. **Comments**: Add comments to explain complex logic
-   ```
-   // This rule handles the special case where...
-   ```
-
-4. **Structure**: Organize your goals in a logical hierarchy
-
-5. **Modularity**: Create reusable queries and procedures instead of duplicating code
-
-## Next Steps
-
-Now that you understand the basics of Osiris scripting and how to use the Story Editor, start experimenting with creating your own scripts.
-
-Remember that learning Osiris is a process, and you'll get better with practice. Don't hesitate to look at examples from the main game or ask for help on the [Larian Forums](http://larian.com/forums/ubbthreads.php?ubb=postlist&Board=77&page=1).
+1. **Use descriptive names**: Choose clear, descriptive names for your goals, databases, and variables.
+2. **Comment your code**: Add comments to explain complex logic and the purpose of rules.
+3. **Test incrementally**: Build and test small pieces of functionality before moving on.
+4. **Watch the Osiris Log**: Regularly check the log to understand what's happening.
+5. **Optimize for performance**: Be mindful of rules that might generate many evaluations.

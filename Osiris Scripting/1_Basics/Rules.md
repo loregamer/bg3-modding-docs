@@ -4,6 +4,20 @@ Rules are the heart of Osiris scripting. A rule consists of conditions that, whe
 
 ## Rule Structure
 
+Rules in Osiris have two parts:
+
+1. One or more conditions
+   * This part begins with `IF`
+   * This part is **evaluated** whenever the rule is **triggered**
+   * Each condition is on its own line
+   * Each condition is separated by the line `AND`
+
+2. One or more actions
+   * This part begins with `THEN`
+   * This part is **executed** when all of the conditions are met
+   * Each action is on its own line
+   * Each action ends with `;`
+
 The basic structure of a rule is:
 
 ```
@@ -20,13 +34,20 @@ Action1;
 ..]
 ```
 
-Rules are evaluated whenever one of the trigger conditions becomes fulfilled. If all trigger and extra conditions are fulfilled at that point, the actions of the rule are executed.
+## Types of Conditions
 
-## Trigger Conditions
+There are two categories of conditions in Osiris:
+
+1. A **trigger condition** will trigger the rule for evaluation as soon as it becomes true.
+2. An **extra condition** will never trigger an evaluation.
+
+No matter what triggers the rule, every single condition (triggers *and* extras) must all be true when a rule is evaluated for it to execute its actions.
+
+### Trigger Conditions
 
 Trigger conditions are what cause a rule to be evaluated. There are two main types:
 
-### 1. Osiris Events
+#### 1. Osiris Events
 
 Events notify Osiris that something has happened in the game. For example:
 - A character died
@@ -45,7 +66,7 @@ THEN
 DB_PlayerDied(1);
 ```
 
-### 2. Database Triggers
+#### 2. Database Triggers
 
 A rule can be triggered when a new database fact is added. Database fact trigger conditions can appear anywhere in a rule's conditions.
 
@@ -70,11 +91,11 @@ THEN
 DB_PlayerLeft(_Character);
 ```
 
-## Extra Conditions
+### Extra Conditions
 
 Extra conditions are additional checks that don't trigger the rule but must be true for the rule to execute its actions:
 
-### 1. Osiris Queries
+#### 1. Osiris Queries
 
 Queries ask the game engine about aspects of the current game state:
 
@@ -87,9 +108,9 @@ THEN
 DB_DeadPlayer(_Character);
 ```
 
-### 2. User Queries
+#### 2. User Queries
 
-You can define your own queries (see [Subroutines](Subroutines.md)) and use them in conditions:
+You can define your own queries and use them in conditions:
 
 ```
 IF
@@ -100,7 +121,7 @@ THEN
 DB_PlayerInCombat(_Character);
 ```
 
-### 3. Comparisons
+#### 3. Comparisons
 
 You can compare values using operators like `==`, `!=`, `<`, `<=`, `>`, and `>=`:
 
@@ -112,6 +133,23 @@ _Level >= 5 // Comparison
 THEN
 DB_HighLevelPlayer(_Character);
 ```
+
+## Rule Evaluation and Variables
+
+When a rule is triggered for evaluation, Osiris will assign values to variables based on the database conditions. If there are multiple facts that can be assigned to a variable, Osiris will evaluate the rule for each possible value.
+
+For example, if we have:
+
+```
+IF
+DB_Players(_Character)
+THEN
+CharacterGiveExperience(_Character, 1000);
+```
+
+If there are four player characters in the database, this rule will execute once for each character.
+
+When using multiple database conditions with variables, the rule will be evaluated for every possible combination of values. This can lead to exponential growth in the number of evaluations, which is something to be aware of for performance reasons.
 
 ## Actions
 
@@ -151,6 +189,32 @@ DB_PlayerDied(_Character); // Add a database fact
 NOT DB_AlivePlayer(_Character); // Remove a database fact
 ```
 
+## Rule Optimization
+
+To optimize rule performance, consider these practices:
+
+1. **Filter Early**: Put conditions that filter the most values at the beginning of your rule to reduce the number of evaluations.
+
+2. **Avoid Unnecessary Variable Combinations**: Be cautious when using multiple variables from databases, as this can lead to combinatorial explosion.
+
+3. **Use Constants When Possible**: If you only care about specific values, use constants instead of variables:
+
+   ```
+   // Less efficient - evaluates for all players
+   IF
+   DB_Players(_Character)
+   AND
+   _Character == S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d
+   THEN
+   Action1;
+   
+   // More efficient - only triggers for Wyll
+   IF
+   DB_Players(S_Player_Wyll_c774d764-4a17-48dc-b470-32ace9ce447d)
+   THEN
+   Action1;
+   ```
+
 ## Rule Evaluation
 
 A few important things to understand about rule evaluation:
@@ -163,49 +227,6 @@ A few important things to understand about rule evaluation:
 
 4. **No OR Conditions**: Osiris rule conditions can only be combined with AND, not OR. Use user-defined queries to implement OR-conditions.
 
-## Examples
-
-### Event-Triggered Rule
-
-```
-IF
-CharacterDied(_Character) // Event trigger
-AND
-DB_IsPlayer(_Character) // Database check
-THEN
-DB_PlayerDied(_Character);
-PlaySound(_Character, "Death");
-```
-
-### Database-Triggered Rule
-
-```
-IF
-DB_PlayerJoinedParty(_Character) // Database trigger
-AND
-CharacterGetLevel(_Character, _Level) // Query
-AND
-_Level < 3 // Comparison
-THEN
-CharacterLevelUpTo(_Character, 3); // Action
-```
-
-### Multiple Rules for Same Trigger
-
-```
-// First rule
-IF
-DB_QuestCompleted("MainQuest")
-THEN
-DB_GameFinished(1);
-
-// Second rule - also triggers on the same condition
-IF
-DB_QuestCompleted("MainQuest")
-THEN
-PlayEndCredits();
-```
-
 ## Next Steps
 
-Continue to the [Variables](Variables.md) section to learn how to use variables to make your rules more flexible.
+Continue to the [Variables](../2_Intermediate/Variables.md) section to learn how to use variables to make your rules more flexible.

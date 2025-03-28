@@ -71,11 +71,48 @@ All of these inherit from GUIDSTRING and can be used when you need to specifical
 
 ## Type Casting
 
+Type casting is used to convert a value from one type to another. In Osiris, this is often necessary when working with different APIs that expect different types, or when combining variables from different sources.
+
 You can cast a GUIDSTRING to any of the specific types by adding the type name in parentheses:
 
 ```
 (CHARACTERGUID)123e4567-e89b-12d3-a456-426655440000
 (ITEMGUID)MyItem_123e4567-e89b-12d3-a456-426655440000
+```
+
+Example of type casting in a rule:
+
+```
+IF
+FlagSet(_Player, "SOME_FLAG") // _Player is GUIDSTRING
+AND
+DB_Players((CHARACTER)_Player) // Cast to CHARACTER type for the database check
+THEN
+CharacterGiveExperience(_Player, 1000);
+```
+
+## Type Conflicts
+
+If you receive a "Conflict with function definition" error, it often means the Story Editor has been told a single variable has multiple types. For example:
+
+```
+IF
+FlagSet(_Player, "SOME_FLAG") // _Player is GUIDSTRING
+AND
+DB_Players(_Player) // DB_Players expects CHARACTER type
+THEN
+CharacterGiveExperience(_Player, 1000);
+```
+
+This would cause an error because `_Player` is used as both GUIDSTRING and CHARACTER. To fix this, you need to cast the variable to the expected type:
+
+```
+IF
+FlagSet(_Player, "SOME_FLAG")
+AND
+DB_Players((CHARACTER)_Player) // Cast to CHARACTER type
+THEN
+CharacterGiveExperience(_Player, 1000);
 ```
 
 ## Type Rules and Best Practices
@@ -95,6 +132,8 @@ You can cast a GUIDSTRING to any of the specific types by adding the type name i
 3. **Naming Convention**: When referring to objects/local instances, follow the correct naming convention. Prefix names with the appropriate type (e.g., `CHARACTERGUID_`, `ITEMGUID_`) for better readability.
 
 4. **Comparison**: GUIDSTRING and its descendent types can only be compared for equality (`==`) and inequality (`!=`), while the other types can also be compared with `<`, `<=`, `>`, and `>=`.
+
+5. **Be Consistent**: Try to be consistent with types throughout your code to minimize the need for explicit type casting.
 
 ## Next Steps
 
