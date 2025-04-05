@@ -51,6 +51,8 @@ Divine commands follow this general syntax:
 Divine.exe --action <action> --game <game> --source <source_path> [--destination <destination_path>] [other options]
 ```
 
+**IMPORTANT:** Always specify the action using the `--action` parameter. Omitting this parameter or using just the action name as a positional parameter will not work.
+
 - `--action` or `-a`: The operation to perform (extract-package, create-package, convert-resource, etc.)
 - `--game` or `-g`: Target game (dos, dosee, dos2, dos2de, bg3)
 - `--source` or `-s`: Source file or directory path
@@ -320,36 +322,36 @@ Available encryption methods:
 
 4. Convert back to GR2:
    ```
-   Divine.exe convert-model --game bg3 --source "model.dae" --destination "modified/model.gr2"
+   Divine.exe --action convert-model --game bg3 --source "model.dae" --destination "modified/model.gr2"
    ```
 
 5. Create mod package:
    ```
-   Divine.exe create-package --game bg3 --source "modified/" --destination "ModelMod.pak"
+   Divine.exe --action create-package --game bg3 --source "modified/" --destination "ModelMod.pak"
    ```
 
 ### Converting Savegames
 
 1. Extract a savegame:
    ```
-   Divine.exe extract-package --game bg3 --source "savegame.lsv" --destination "extracted_save/"
+   Divine.exe --action extract-package --game bg3 --source "savegame.lsv" --destination "extracted_save/"
    ```
 
 2. Convert save files to editable format:
    ```
-   Divine.exe convert-resources --game bg3 --source "extracted_save/" --destination "editable_save/" --input-format lsf --output-format lsx
+   Divine.exe --action convert-resources --game bg3 --source "extracted_save/" --destination "editable_save/" --input-format lsf --output-format lsx
    ```
 
 3. [Edit the save files]
 
 4. Convert back to game format:
    ```
-   Divine.exe convert-resources --game bg3 --source "editable_save/" --destination "modified_save/" --input-format lsx --output-format lsf
+   Divine.exe --action convert-resources --game bg3 --source "editable_save/" --destination "modified_save/" --input-format lsx --output-format lsf
    ```
 
 5. Create a new savegame:
    ```
-   Divine.exe create-package --game bg3 --source "modified_save/" --destination "modified_savegame.lsv" --compression-method zlib
+   Divine.exe --action create-package --game bg3 --source "modified_save/" --destination "modified_savegame.lsv" --compression-method zlib
    ```
 
 ## Troubleshooting
@@ -369,7 +371,7 @@ Available encryption methods:
 Use different log levels for troubleshooting:
 
 ```
-Divine.exe extract-package --game bg3 --source "Game.pak" --destination "extracted/" --loglevel debug
+Divine.exe --action extract-package --game bg3 --source "Game.pak" --destination "extracted/" --loglevel debug
 ```
 
 Log levels from least to most verbose:
