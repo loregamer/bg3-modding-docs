@@ -26,7 +26,6 @@ This document provides a comprehensive guide to using the LSLib Divine Command L
   - [Working with Specific Game Versions](#working-with-specific-game-versions)
   - [Using Regular Expressions](#using-regular-expressions)
   - [Compression Settings](#compression-settings)
-  - [Encryption Settings](#encryption-settings)
 - [Example Workflows](#example-workflows)
   - [Creating a Mod](#creating-a-mod)
   - [Extracting and Editing Models](#extracting-and-editing-models)
@@ -73,8 +72,6 @@ These options apply to most Divine commands:
 | `--use-regex` | | Use regex for filtering | true/false | false |
 | `--legacy-guids` | | Use legacy GUID format | true/false | false |
 | `--use-package-name` | | Use package name for destination | true/false | false |
-| `--encryption-method` | | Set encryption method | none, aes128, aes256, xor | none |
-| `--encryption-key` | | Set encryption key/password | any string | (none) |
 
 ## Package Operations
 
@@ -252,29 +249,6 @@ Control package compression with the `--compression-method` parameter:
 Divine.exe --action create-package --game bg3 --source "mod_files/" --destination "MyMod.pak" --compression-method lz4hc
 ```
 
-### Encryption Settings
-
-Secure your package files with encryption (BG3/V18 only):
-
-```
-# Create with encryption
-Divine.exe --action create-package --game bg3 --source "mod_files/" --destination "MyMod.pak" --encryption-method aes256 --encryption-key "my_secure_password"
-
-# Extract encrypted package
-Divine.exe --action extract-package --game bg3 --source "encrypted.pak" --destination "extracted/" --encryption-key "my_secure_password"
-```
-
-Available encryption methods:
-- `none`: No encryption (default)
-- `aes128`: AES encryption with 128-bit key
-- `aes256`: AES encryption with 256-bit key (strongest)
-- `xor`: Simple XOR-based encryption (lightweight)
-
-**Important notes:**
-- Encryption is only available for BG3 packages (version 18+)
-- The same key must be used for extraction as was used for creation
-- There is no way to recover a lost encryption key
-
 ## Example Workflows
 
 ### Creating a Mod
@@ -299,11 +273,6 @@ Available encryption methods:
 5. Create a mod package:
    ```
    Divine.exe --action create-package --game bg3 --source "mod/" --destination "MyPortraitMod.pak"
-   ```
-   
-   For a secured mod with encrypted content:
-   ```
-   Divine.exe --action create-package --game bg3 --source "mod/" --destination "MySecureMod.pak" --encryption-method aes256 --encryption-key "my_secure_password"
    ```
 
 ### Extracting and Editing Models
@@ -363,8 +332,6 @@ Available encryption methods:
 3. **"Unknown game"** - Specify a valid game parameter (dos, dosee, dos2, dos2de, bg3)
 4. **"Unknown resource format"** - Use a valid format for resource conversion
 5. **"Failed to convert resource"** - Check file formats and permissions
-6. **"Invalid encryption key provided"** - The provided key doesn't match the one used to encrypt the package
-7. **"Encryption is only supported for package version V18"** - Only BG3 packages support encryption
 
 ### Log Levels
 
