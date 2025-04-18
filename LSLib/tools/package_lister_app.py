@@ -5,8 +5,9 @@ import keyring # For storing Divine.exe path securely
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QFileDialog, QLineEdit, QTextEdit, QComboBox, QLabel,
-    QMessageBox
+    QMessageBox, QTreeView
 )
+from PyQt6.QtGui import QStandardItemModel, QStandardItem # Corrected import
 from PyQt6.QtCore import QProcess
 
 class PackageListerApp(QMainWindow):
@@ -59,11 +60,13 @@ class PackageListerApp(QMainWindow):
         main_layout.addWidget(list_button)
 
         # Output area
-        self.output_text = QTextEdit()
-        self.output_text.setReadOnly(True)
-        self.output_text.setPlaceholderText("Package contents will appear here...")
+        self.output_view = QTreeView() # Renamed from output_text
+        # self.output_view.setReadOnly(True) # Removed: QTreeView has no setReadOnly
+        self.output_model = QStandardItemModel() # Create the model
+        self.output_view.setModel(self.output_model) # Set the model for the view
+        self.output_view.setHeaderHidden(True) # Hide default header
         main_layout.addWidget(QLabel("Contents:"))
-        main_layout.addWidget(self.output_text)
+        main_layout.addWidget(self.output_view)
 
         # Process for running Divine
         self.process = QProcess(self)
@@ -171,8 +174,9 @@ class PackageListerApp(QMainWindow):
         #     QMessageBox.critical(self, "Error", f"Divine.exe not found at: {self.divine_path}\nPlease ensure it's in the correct location.")
         #     return
 
-        self.output_text.clear()
-        self.output_text.append(f"Listing contents of {package_path} for game {selected_game}...\n")
+        # Ensure model is cleared before listing new contents
+        self.output_model.clear()
+        # self.output_text.append(f"Listing contents of {package_path} for game {selected_game}...\n") # Will use model
 
         # Prepare arguments for QProcess
         arguments = [
@@ -186,19 +190,54 @@ class PackageListerApp(QMainWindow):
         self.process.start(self.divine_path, arguments)
 
 
+    def add_path_to_model(self, path):
+        """Adds a single file path to the QStandardItemModel, creating parent items as needed."""
+        parts = path.strip().replace("\\", "/").split('/') # Normalize separators and split
+        parent_item = self.output_model.invisibleRootItem()
+
+        for i, part in enumerate(parts):
+            if not part: # Skip empty parts (e.g., from leading/trailing slashes)
+                continue
+
+            found = False
+            for row in range(parent_item.rowCount()):
+                child = parent_item.child(row)
+                if child and child.text() == part:
+                    parent_item = child
+                    found = True
+                    break
+
+            if not found:
+                new_item = QStandardItem(part)
+                # Optional: Set icons for folders/files if desired
+                # You might need more logic to determine if it's a file or directory based on position
+                # if i < len(parts) - 1:
+                    # new_item.setIcon(QIcon.fromTheme("folder")) # Example
+                # else:
+                    # new_item.setIcon(QIcon.fromTheme("text-x-generic")) # Example
+
+                parent_item.appendRow(new_item)
+                parent_item = new_item # Descend into the newly created item
+
+
     def handle_stdout(self):
         data = self.process.readAllStandardOutput()
         text = bytes(data).decode('utf-8', errors='ignore')
-        self.output_text.append(text)
+        # Parse the output and add to the model
+        lines = text.splitlines()
+        for line in lines:
+            if line.strip(): # Ignore empty lines
+                self.add_path_to_model(line)
+        # self.output_text.append(text) # Will populate model
 
     def handle_stderr(self):
         data = self.process.readAllStandardError()
         text = bytes(data).decode('utf-8', errors='ignore')
-        self.output_text.append(f"ERROR: {text}")
+        # self.output_text.append(f"ERROR: {text}") # Handle errors differently? Maybe status bar or popup
 
     def process_finished(self, exitCode, exitStatus):
         status_str = "finished successfully" if exitStatus == QProcess.ExitStatus.NormalExit and exitCode == 0 else "failed/crashed"
-        self.output_text.append(f"\nProcess {status_str} with exit code {exitCode}.")
+        # self.output_text.append(f"\nProcess {status_str} with exit code {exitCode}.") # Status update, maybe status bar
 
 
 
